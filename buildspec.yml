@@ -1,64 +1,28 @@
 version: 0.2
 
-#run-as: codebuild-user
-
 phases:
-#  install:
-#    runtime-versions:
-#      nodejs: 12
-#      docker: 20
   pre_build:
     commands:
       - export npm_config_cache=/tmp/cache/
-      - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 435160473462.dkr.ecr.us-east-2.amazonaws.com/test-docker
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME
       - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &
       - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
       - npm i
-#      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
   build:
     commands:
-#      - echo Testing
       - echo $IMAGE_REPO_NAME:$IMAGE_TAG
       - aws --version
       - npm run build
-      - docker build -t bookabarber:$IMAGE_TAG .
-      - docker tag bookabarber:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/test-docker:bookabarber
+      - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+      - docker tag $IMAGE_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_NAME:$IMAGE_TAG
   post_build:
     commands:
       - echo  Pushing the Docker Image
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/test-docker:bookabarber
-      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG > imagedefinitions.json
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_NAME:$IMAGE_TAG
+      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG > imagedefinitions.json
 artifacts:
   files: imagedefinitions.json
-version: 0.2
 
-#run-as: codebuild-user
 
-phases:
-#  install:
-#    runtime-versions:
-#      nodejs: 12
-#      docker: 20
-  pre_build:
-    commands:
-      - export npm_config_cache=/tmp/cache/
-      - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 435160473462.dkr.ecr.us-east-2.amazonaws.com/test-docker
-      - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &
-      - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
-      - npm i
-#      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
-  build:
-    commands:
-#      - echo Testing
-      - echo $IMAGE_REPO_NAME:$IMAGE_TAG
-      - aws --version
-      - npm run build
-      - docker build -t bookabarber:$IMAGE_TAG .
-      - docker tag bookabarber:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/test-docker:bookabarber
-  post_build:
-    commands:
-      - echo  Pushing the Docker Image
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/test-docker:bookabarber
-      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG > imagedefinitions.json
-artifacts:
-  files: imagedefinitions.json
+
+
