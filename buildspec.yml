@@ -1,3 +1,4 @@
+#UBUNTU buildspec, not amazonlinux2 vers.3
 version: 0.2
 
 phases:
